@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noise Factory | Experimental Instrument Store</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'noise-cream': '#F9F8F4',
+                        'noise-black': '#1a1a1a',
+                        'pastel-blue': '#C8E0F4',
+                        'pastel-pink': '#F4C8D5',
+                        'pastel-green': '#D4F4C8',
+                        'pastel-yellow': '#F4EDC8',
+                        'pastel-purple': '#E0C8F4',
+                    },
+                    fontFamily: {
+                        'sans': ['Space Grotesk', 'sans-serif'],
+                        'display': ['Syne', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'hard': '4px 4px 0px 0px rgba(0,0,0,1)',
+                        'hard-hover': '6px 6px 0px 0px rgba(0,0,0,1)',
+                        'hard-sm': '2px 2px 0px 0px rgba(0,0,0,1)',
+                    },
+                    animation: {
+                        'scroll-left': 'scrollLeft 40s linear infinite',
+                        'scroll-right': 'scrollRight 40s linear infinite',
+                    },
+                    keyframes: {
+                        scrollLeft: {
+                            '0%': { transform: 'translateX(0)' },
+                            '100%': { transform: 'translateX(-50%)' },
+                        },
+                        scrollRight: {
+                            '0%': { transform: 'translateX(-50%)' },
+                            '100%': { transform: 'translateX(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Utilities for Anti-Design Feel */
+        ::selection {
+            background-color: #F4C8D5;
+            color: #1a1a1a;
+        }
+        
+        body {
+            background-color: #F9F8F4;
+            color: #1a1a1a;
+            overflow-x: hidden;
+        }
+
+        .text-outline {
+            -webkit-text-stroke: 1px #1a1a1a;
+            color: transparent;
+        }
+        
+        .text-outline-white {
+            -webkit-text-stroke: 1px #F9F8F4;
+            color: transparent;
+        }
+
+        .blob-shape {
+            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+        }
+
+        .blob-shape-2 {
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+        }
+
+        /* Marquee Animation */
+        .marquee-container {
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .marquee-content {
+            display: inline-block;
+            animation: marquee 20s linear infinite;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Hide scrollbar for general use */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .nav-link {
+            position: relative;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: black;
+            transform: scaleX(0);
+            transform-origin: bottom right;
+            transition: transform 0.25s ease-out;
+        }
+        .nav-link:hover::after {
+            transform: scaleX(1);
+            transform-origin: bottom left;
+        }
+
+        /* Custom Tab Styles */
+        .tab-btn.active {
+            background-color: #1a1a1a;
+            color: #F9F8F4;
+            transform: translateY(-4px);
+            box-shadow: 6px 6px 0px 0px rgba(0,0,0,1);
+        }
+
+        /* Pause marquee on hover */
+        .pause-on-hover:hover {
+            animation-play-state: paused;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Navigation (Fixed & Shared) -->
+    <nav class="fixed w-full z-50 mix-blend-difference text-white top-0 left-0 p-6 flex justify-between items-center">
+        <div class="font-display font-bold text-2xl tracking-tighter uppercase relative group cursor-pointer" onclick="showView('home')">
+            Noise<span class="italic font-light">Factory</span>.
+            <div class="absolute -bottom-2 left-0 w-full h-1 bg-white scale-x-0 group-hover:scale-x-100 transition-transform"></div>
+        </div>
+        
+        <div class="hidden md:flex space-x-8 font-sans text-sm font-medium uppercase tracking-widest items-center">
+            <button onclick="showView('home')" class="hover:underline decoration-wavy underline-offset-4">Home</button>
+            <button onclick="showView('products')" class="hover:underline decoration-wavy underline-offset-4">Shop All</button>
+            <button class="relative" onclick="alert('Cart is empty!')">
+                <i class="fas fa-shopping-cart text-lg"></i>
+                <span class="absolute -top-2 -right-3 bg-pastel-pink text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-white">0</span>
+            </button>
+        </div>
+
+        <button class="md:hidden text-2xl" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">
+            <i class="fas fa-bars"></i>
+        </button>
+    </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-menu" class="hidden fixed inset-0 bg-noise-black text-noise-cream z-40 flex flex-col justify-center items-center space-y-8 font-display text-4xl">
+        <button onclick="showView('home'); document.getElementById('mobile-menu').classList.add('hidden')">Home</button>
+        <button onclick="showView('products'); document.getElementById('mobile-menu').classList.add('hidden')">Shop Gear</button>
+        <button onclick="document.getElementById('mobile-menu').classList.add('hidden')">Cart (0)</button>
+        <button class="absolute top-6 right-6 text-2xl" onclick="document.getElementById('mobile-menu').classList.add('hidden')">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <!-- ======================= HOME VIEW ======================= -->
+    <div id="home-view" class="transition-opacity duration-500">
+        
+        <!-- Hero Section -->
+        <header class="min-h-screen flex flex-col justify-center items-center relative overflow-hidden bg-noise-cream px-4">
+            <!-- Abstract Shapes -->
+            <div class="absolute top-20 right-10 w-64 h-64 bg-pastel-pink rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-pulse"></div>
+            <div class="absolute bottom-20 left-10 w-72 h-72 bg-pastel-blue rounded-full mix-blend-multiply filter blur-3xl opacity-60"></div>
+            
+            <div class="relative z-10 text-center">
+                <h1 class="font-display font-extrabold text-[15vw] leading-[0.8] tracking-tighter text-noise-black mix-blend-darken">
+                    NOISE
+                </h1>
+                <h1 class="font-display font-bold text-[15vw] leading-[0.8] tracking-tighter text-outline italic ml-[10vw] -mt-4 md:-mt-10">
+                    FACTORY
+                </h1>
+                
+                <p class="font-sans text-lg md:text-xl mt-12 max-w-md mx-auto text-left border-l-2 border-black pl-4 transform -rotate-1">
+                    Your Local Music Instrument Destination. 
+                    <span class="block text-gray-500 text-sm mt-2">Experimental gear for the modern noise maker.</span>
+                </p>
+
+                <div class="mt-12 flex justify-center gap-4">
+                    <button onclick="showView('products')" class="bg-noise-black text-noise-cream px-8 py-4 font-sans font-bold uppercase tracking-wider shadow-hard hover:shadow-hard-hover hover:-translate-y-1 transition-all border-2 border-black">
+                        Shop Instruments
+                    </button>
+                    <a href="#contact" class="bg-pastel-yellow text-noise-black px-8 py-4 font-sans font-bold uppercase tracking-wider shadow-hard hover:shadow-hard-hover hover:-translate-y-1 transition-all border-2 border-black rotate-2">
+                        Visit Store
+                    </a>
+                </div>
+            </div>
+
+            <!-- Floating Elements -->
+            <div class="absolute bottom-10 right-10 hidden md:block">
+                <div class="w-32 h-32 border-2 border-black rounded-full flex items-center justify-center animate-[spin_10s_linear_infinite]">
+                    <i class="fas fa-star text-4xl"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Marquee Partners -->
+        <div class="bg-noise-black py-6 border-y-2 border-black rotate-1 scale-105 z-20 relative">
+            <div class="marquee-container font-display text-4xl text-noise-cream uppercase font-bold tracking-widest">
+                <div class="marquee-content">
+                    Authorized Partner: Yamaha <span class="text-pastel-blue mx-4">★</span> Casino <span class="text-pastel-pink mx-4">★</span> Fender <span class="text-pastel-green mx-4">★</span> Ahuja <span class="text-pastel-yellow mx-4">★</span> Roland <span class="text-pastel-blue mx-4">★</span> Korg <span class="text-pastel-pink mx-4">★</span> Yamaha <span class="text-pastel-blue mx-4">★</span> Casino <span class="text-pastel-pink mx-4">★</span> Fender <span class="text-pastel-green mx-4">★</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- About Section -->
+        <section id="about" class="py-24 px-6 md:px-20 max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                <div class="relative">
+                    <div class="absolute -top-4 -left-4 w-full h-full border-2 border-black bg-pastel-green -z-10 rotate-3"></div>
+                    <img src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=1000&auto=format&fit=crop" alt="Store Interior" class="w-full h-[500px] object-cover border-2 border-black grayscale hover:grayscale-0 transition-all duration-500">
+                    <div class="absolute -bottom-10 -right-10 bg-white p-6 border-2 border-black shadow-hard rotate-6 hidden md:block">
+                        <p class="font-display font-bold text-xl">EST. 2024</p>
+                    </div>
+                </div>
+                
+                <div class="space-y-8">
+                    <h2 class="font-display text-6xl font-bold leading-none">About<span class="text-pastel-blue px-2 italic">Us</span>.</h2>
+                    <div class="font-sans text-xl leading-relaxed space-y-6">
+                        <p>Noise Factory is a creative haven for musicians, producers, and sonic explorers. We believe in the imperfect, the raw, and the experimental.</p>
+                        <p>From pristine Yamaha acoustics to gritty distortion pedals, we curate gear that inspires you to break the mold. Trusted, local, and just a little bit weird.</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="w-12 h-1 bg-black"></span>
+                        <span class="font-mono text-sm uppercase">Curated by Musicians</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Achievements Section -->
+        <section id="achievements" class="py-20 bg-noise-black text-noise-cream overflow-hidden border-y-2 border-white">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="flex flex-col md:flex-row items-center justify-between mb-16 relative">
+                    <h2 class="font-display text-5xl md:text-7xl font-bold uppercase tracking-tighter relative z-10">
+                        Our <br> <span class="text-outline-white">Achievements</span>
+                    </h2>
+                    <div class="absolute -top-10 left-1/4 w-32 h-32 bg-pastel-pink rounded-full mix-blend-exclusion filter blur-xl opacity-50 animate-pulse"></div>
+                    <p class="font-sans text-xl md:w-1/3 mt-6 md:mt-0 text-gray-400 border-l-2 border-pastel-green pl-4">
+                        We don't just make noise; we make history. Check the stats.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mt-12">
+                    <!-- Stat 1 -->
+                    <div class="p-6 border-2 border-white bg-noise-black shadow-[4px_4px_0px_0px_#F4C8D5] hover:shadow-[8px_8px_0px_0px_#F4C8D5] hover:-translate-y-2 transition-all rotate-1">
+                        <span class="block font-display text-6xl font-bold text-pastel-pink mb-2">5k+</span>
+                        <h3 class="font-sans font-bold text-lg uppercase tracking-wider">Happy Noisemakers</h3>
+                        <p class="text-sm text-gray-400 mt-2 font-mono">Instruments found their forever homes.</p>
+                    </div>
+
+                    <!-- Stat 2 -->
+                    <div class="p-6 border-2 border-white bg-noise-black shadow-[4px_4px_0px_0px_#C8E0F4] hover:shadow-[8px_8px_0px_0px_#C8E0F4] hover:-translate-y-2 transition-all -rotate-2 md:mt-12">
+                        <span class="block font-display text-6xl font-bold text-pastel-blue mb-2">#1</span>
+                        <h3 class="font-sans font-bold text-lg uppercase tracking-wider">Indie Gear Shop</h3>
+                        <p class="text-sm text-gray-400 mt-2 font-mono">Voted by Metro City Music Awards 2024.</p>
+                    </div>
+
+                    <!-- Stat 3 -->
+                    <div class="p-6 border-2 border-white bg-noise-black shadow-[4px_4px_0px_0px_#D4F4C8] hover:shadow-[8px_8px_0px_0px_#D4F4C8] hover:-translate-y-2 transition-all rotate-2">
+                        <span class="block font-display text-6xl font-bold text-pastel-green mb-2">500+</span>
+                        <h3 class="font-sans font-bold text-lg uppercase tracking-wider">Live Workshops</h3>
+                        <p class="text-sm text-gray-400 mt-2 font-mono">From modular synthesis to guitar maintenance.</p>
+                    </div>
+
+                    <!-- Stat 4 -->
+                    <div class="relative p-6 border-2 border-white bg-pastel-purple text-black shadow-[4px_4px_0px_0px_#fff] hover:shadow-[8px_8px_0px_0px_#fff] hover:-translate-y-2 transition-all -rotate-1 md:mt-12">
+                        <div class="absolute -top-3 -right-3 bg-black text-white text-xs font-bold px-2 py-1 rotate-12">LEGENDARY</div>
+                        <span class="block font-display text-6xl font-bold text-black mb-2">100%</span>
+                        <h3 class="font-sans font-bold text-lg uppercase tracking-wider">Analog Soul</h3>
+                        <p class="text-sm text-gray-800 mt-2 font-mono">No presets. Just pure, raw sound.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Featured Instruments & Products (Grid Layout) -->
+        <section id="instruments" class="py-24 bg-white border-t-2 border-black relative">
+            <div class="absolute top-0 left-0 w-full h-4 bg-gradient-to-r from-pastel-pink via-pastel-blue to-pastel-green"></div>
+            
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="flex flex-col md:flex-row justify-between items-end mb-16">
+                    <h2 class="font-display text-6xl md:text-8xl font-bold uppercase">Our<br>Products</h2>
+                    <div class="md:w-1/3 text-right">
+                         <p class="font-sans text-lg mb-6">High-fidelity tools for low-fidelity souls.</p>
+                         <button onclick="showView('products')" class="text-lg font-bold uppercase border-b-2 border-black hover:text-pastel-blue hover:border-pastel-blue transition-colors">
+                            View Full Inventory &rarr;
+                         </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+                    <!-- Product 1 -->
+                    <div class="group cursor-pointer">
+                        <div class="bg-gray-100 aspect-[4/5] relative overflow-hidden border-2 border-black mb-4">
+                            <img src="https://images.unsplash.com/photo-1550985543-f4423c9d7481?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            <div class="absolute top-4 right-4 bg-pastel-pink text-black text-xs font-bold px-3 py-1 border border-black uppercase">Hot</div>
+                            <div class="absolute bottom-0 left-0 w-full bg-white border-t-2 border-black p-3 flex justify-between items-center translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                                <span class="font-bold">$1,299</span>
+                                <button class="text-xs uppercase font-bold hover:underline">Add to Cart</button>
+                            </div>
+                        </div>
+                        <h3 class="font-display text-2xl font-bold group-hover:text-pastel-blue transition-colors">Electric Guitars</h3>
+                    </div>
+
+                    <!-- Product 2 (Offset) -->
+                    <div class="group cursor-pointer md:mt-16">
+                        <div class="bg-gray-100 aspect-[4/5] relative overflow-hidden border-2 border-black mb-4 shadow-hard group-hover:shadow-hard-hover transition-all">
+                            <img src="https://images.unsplash.com/photo-1563989852230-588383a8f572?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            <div class="absolute bottom-0 left-0 w-full bg-white border-t-2 border-black p-3 flex justify-between items-center translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                                <span class="font-bold">$899</span>
+                                <button class="text-xs uppercase font-bold hover:underline">Add to Cart</button>
+                            </div>
+                        </div>
+                        <h3 class="font-display text-2xl font-bold group-hover:text-pastel-green transition-colors">Synths & Keys</h3>
+                    </div>
+
+                    <!-- Product 3 -->
+                    <div class="group cursor-pointer">
+                        <div class="bg-gray-100 aspect-[4/5] relative overflow-hidden border-2 border-black mb-4 rounded-t-full">
+                            <img src="https://images.unsplash.com/photo-1519892300165-cb5542fb47c7?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        </div>
+                        <h3 class="font-display text-2xl font-bold group-hover:text-pastel-yellow transition-colors">Drum Machines</h3>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Events Section -->
+        <section id="events" class="py-24 bg-noise-cream overflow-hidden">
+            <div class="max-w-7xl mx-auto px-6">
+                <h2 class="font-display text-6xl font-bold mb-16 text-center transform -rotate-2">Our <span class="bg-black text-white px-4">Events</span></h2>
+
+                <div class="space-y-12">
+                    <!-- Event Item 1 -->
+                    <div class="flex flex-col md:flex-row items-center gap-8 group">
+                        <div class="w-full md:w-1/4 text-center md:text-right">
+                            <span class="block font-display text-6xl font-bold text-transparent text-stroke stroke-black text-outline">24</span>
+                            <span class="block font-sans text-xl font-bold uppercase tracking-widest">October</span>
+                        </div>
+                        <div class="hidden md:block w-px h-24 bg-black rotate-12 group-hover:rotate-0 transition-transform"></div>
+                        <div class="w-full md:w-3/4 bg-white border-2 border-black p-8 shadow-hard hover:bg-pastel-blue transition-colors relative">
+                            <div class="absolute -top-3 -right-3 w-8 h-8 bg-black rounded-full"></div>
+                            <h3 class="font-display text-3xl font-bold mb-2">Synth Modular Workshop</h3>
+                            <p class="font-sans">Learn patch theory with local legend DJ Entropy. Bring your own cables.</p>
+                            <a href="#" class="inline-block mt-4 text-sm font-bold border-b border-black uppercase hover:text-white">RSVP Now</a>
+                        </div>
+                    </div>
+
+                    <!-- Event Item 2 -->
+                    <div class="flex flex-col md:flex-row items-center gap-8 group md:ml-20">
+                        <div class="w-full md:w-1/4 text-center md:text-right">
+                            <span class="block font-display text-6xl font-bold text-transparent text-stroke stroke-black text-outline">02</span>
+                            <span class="block font-sans text-xl font-bold uppercase tracking-widest">November</span>
+                        </div>
+                        <div class="hidden md:block w-px h-24 bg-black -rotate-6 group-hover:rotate-0 transition-transform"></div>
+                        <div class="w-full md:w-3/4 bg-white border-2 border-black p-8 shadow-hard hover:bg-pastel-pink transition-colors relative">
+                            <div class="absolute -bottom-3 -left-3 w-8 h-8 bg-black rounded-full"></div>
+                            <h3 class="font-display text-3xl font-bold mb-2">Yamaha Product Launch</h3>
+                            <p class="font-sans">First look at the new Revstar series. Demo units available to try.</p>
+                            <a href="#" class="inline-block mt-4 text-sm font-bold border-b border-black uppercase hover:text-white">RSVP Now</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Our Artists -->
+        <section class="py-24 bg-pastel-green border-y-2 border-black">
+            <div class="max-w-7xl mx-auto px-6">
+                <h2 class="font-display text-5xl md:text-7xl font-bold mb-12 mix-blend-multiply">Our Artists</h2>
+                
+                <div class="flex flex-wrap justify-center gap-10">
+                    <!-- Artist 1 -->
+                    <div class="relative w-64 h-64 group">
+                        <div class="absolute inset-0 bg-black translate-x-2 translate-y-2 blob-shape transition-transform group-hover:translate-x-4 group-hover:translate-y-4"></div>
+                        <img src="https://images.unsplash.com/photo-1517230874861-144471e5520c?q=80&w=400&auto=format&fit=crop" class="w-full h-full object-cover border-2 border-black blob-shape relative z-10 grayscale group-hover:grayscale-0 transition-all">
+                        <div class="absolute bottom-4 left-10 z-20 bg-white border border-black px-3 py-1 font-bold text-sm rotate-3">The Static</div>
+                    </div>
+
+                    <!-- Artist 2 -->
+                    <div class="relative w-64 h-64 group mt-10 md:mt-0">
+                        <div class="absolute inset-0 bg-pastel-pink translate-x-2 translate-y-2 blob-shape-2 transition-transform group-hover:translate-x-4 group-hover:translate-y-4"></div>
+                        <img src="https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=400&auto=format&fit=crop" class="w-full h-full object-cover border-2 border-black blob-shape-2 relative z-10 grayscale group-hover:grayscale-0 transition-all">
+                        <div class="absolute top-4 right-6 z-20 bg-white border border-black px-3 py-1 font-bold text-sm -rotate-2">Echo Vibe</div>
+                    </div>
+
+                    <!-- Artist 3 -->
+                    <div class="relative w-64 h-64 group">
+                        <div class="absolute inset-0 bg-pastel-yellow translate-x-2 translate-y-2 rounded-full transition-transform group-hover:translate-x-4 group-hover:translate-y-4"></div>
+                        <img src="https://images.unsplash.com/photo-1516054575922-f0b8eead1aab?q=80&w=400&auto=format&fit=crop" class="w-full h-full object-cover border-2 border-black rounded-full relative z-10 grayscale group-hover:grayscale-0 transition-all">
+                        <div class="absolute bottom-10 right-0 z-20 bg-white border border-black px-3 py-1 font-bold text-sm rotate-6">Rhythm X</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Photo Gallery (Animated Marquee) -->
+        <section class="py-24 bg-noise-cream overflow-hidden">
+            <div class="max-w-7xl mx-auto px-6 mb-12">
+                <h2 class="font-display text-4xl font-bold uppercase tracking-tighter">Our Photo Gallery</h2>
+                <p class="font-sans text-lg mt-2">Captured moments of sonic chaos.</p>
+            </div>
+            
+            <!-- Gallery Marquee Wrapper -->
+            <div class="space-y-8">
+                <!-- Row 1: Left Scroll -->
+                <div class="relative w-full rotate-1">
+                    <div class="flex gap-6 w-max animate-scroll-left hover:[animation-play-state:paused]" id="gallery-row-1">
+                        <!-- JS Injected Images -->
+                    </div>
+                </div>
+
+                <!-- Row 2: Right Scroll -->
+                <div class="relative w-full -rotate-1">
+                    <div class="flex gap-6 w-max animate-scroll-right hover:[animation-play-state:paused]" id="gallery-row-2">
+                         <!-- JS Injected Images -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- REVIEWS SECTION -->
+        <section class="py-24 bg-white border-t-2 border-black overflow-hidden relative">
+            <div class="max-w-7xl mx-auto px-6 mb-12 flex flex-col md:flex-row items-center justify-between">
+                <div>
+                    <h2 class="font-display text-5xl font-bold mb-2">What Our Happy Customer say</h2>
+                    <p class="font-sans text-gray-500">Real talk from real noise makers.</p>
+                </div>
+                
+                <!-- Rating Dashboard -->
+                <div class="flex items-center gap-8 bg-noise-cream border-2 border-black p-6 shadow-hard mt-6 md:mt-0 transform rotate-1">
+                    <div class="text-center">
+                        <span class="block font-display text-5xl font-bold text-noise-black">4.3</span>
+                        <div class="text-pastel-pink text-sm space-x-0.5">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+                        </div>
+                        <span class="text-xs font-mono text-gray-500 mt-1 block">1,240 Reviews</span>
+                    </div>
+                    <div class="h-12 w-px bg-black"></div>
+                    <button onclick="document.getElementById('feedback-modal').classList.remove('hidden')" class="bg-black text-white font-bold uppercase text-sm px-6 py-3 hover:bg-pastel-green hover:text-black transition-colors shadow-hard-sm">
+                        Write a Review
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Marquee Container -->
+            <div class="relative w-full">
+                <!-- Left Fade -->
+                <div class="absolute left-0 top-0 w-20 h-full bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
+                <!-- Right Fade -->
+                <div class="absolute right-0 top-0 w-20 h-full bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
+
+                <!-- Row 1 (Scroll Left) -->
+                <div class="flex gap-8 mb-8 w-[200%] animate-scroll-left pause-on-hover" id="reviews-row-1">
+                    <!-- JS Injected Reviews Here -->
+                </div>
+
+                <!-- Row 2 (Scroll Right) -->
+                <div class="flex gap-8 w-[200%] animate-scroll-right pause-on-hover" id="reviews-row-2">
+                     <!-- JS Injected Reviews Here -->
+                </div>
+            </div>
+        </section>
+        
+        <!-- Contact Section (Home Footer) -->
+        <section id="contact" class="bg-noise-black text-noise-cream pt-24 pb-12 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-pastel-green rounded-full mix-blend-exclusion filter blur-3xl opacity-20"></div>
+
+            <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16">
+                <!-- Info -->
+                <div>
+                    <h2 class="font-display text-6xl font-bold mb-8">Contact Us</h2>
+                    <div class="space-y-6 font-sans text-xl">
+                        <div class="flex items-start gap-4">
+                            <i class="fas fa-map-marker-alt mt-1 text-pastel-pink"></i>
+                            <p>Near Style bazar, Chandrapur, Udit Nagar,<br>Rourkela, Odisha 769012</p>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <i class="fas fa-phone text-pastel-blue"></i>
+                            <p>+91 77356 61515</p>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <i class="fas fa-envelope text-pastel-yellow"></i>
+                            <p>hello@noisefactory.com</p>
+                        </div>
+                        <div class="flex items-start gap-4 mt-8 pt-8 border-t border-gray-800">
+                            <i class="fas fa-clock text-pastel-green mt-1"></i>
+                            <div>
+                                <p class="font-bold">Opening Hours</p>
+                                <p class="text-base text-gray-400">All Day: 10am - 7:30pm</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Map -->
+                <div class="w-full h-80 bg-gray-800 border-2 border-noise-cream relative shadow-[8px_8px_0px_0px_rgba(255,255,255,0.2)]">
+                    <iframe 
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.1422937950147!2d-73.98731968482413!3d40.75889497932681!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c25855c6480299%3A0x55194ec5a1ae072e!2sTimes%20Square!5e0!3m2!1sen!2sus!4v1620000000000!5m2!1sen!2sus" 
+                        width="100%" 
+                        height="100%" 
+                        style="border:0; filter: grayscale(100%) invert(90%);" 
+                        allowfullscreen="" 
+                        loading="lazy">
+                    </iframe>
+                    <div class="absolute -top-4 -left-4 bg-pastel-pink text-black px-4 py-1 font-bold border border-black rotate-3">Find Us</div>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <div class="mt-24 pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center text-sm font-mono text-gray-500 gap-4">
+                <div>
+                    &copy; 2024 Noise Factory. All rights reserved.
+                </div>
+                <div class="flex gap-6 text-2xl text-noise-cream">
+                    <a href="#" class="hover:text-pastel-blue hover:-translate-y-1 transition-transform"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="hover:text-pastel-pink hover:-translate-y-1 transition-transform"><i class="fab fa-facebook"></i></a>
+                    <a href="#" class="hover:text-pastel-green hover:-translate-y-1 transition-transform"><i class="fab fa-spotify"></i></a>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ======================= PRODUCTS VIEW (Hidden by default) ======================= -->
+    <div id="products-view" class="hidden min-h-screen bg-white pt-24 transition-opacity duration-500">
+        <!-- Product Header -->
+        <div class="bg-pastel-purple border-b-2 border-black py-16 px-6 relative overflow-hidden">
+             <!-- Decor -->
+             <div class="absolute top-10 right-20 w-32 h-32 border-4 border-black rounded-full opacity-20 animate-bounce"></div>
+             
+             <div class="max-w-7xl mx-auto">
+                 <h1 class="font-display text-5xl md:text-7xl font-bold uppercase mb-4">The Inventory</h1>
+                 <p class="font-sans text-xl max-w-2xl">Full catalogue of sonic destruction. Filter by category below.</p>
+             </div>
+        </div>
+
+        <!-- Sticky NavTabs -->
+        <div class="sticky top-20 z-30 bg-white border-b-2 border-black py-4 overflow-x-auto">
+            <div class="max-w-7xl mx-auto px-6 flex space-x-4 min-w-max">
+                <button onclick="filterProducts('all', this)" class="tab-btn active px-6 py-2 border-2 border-black font-bold uppercase hover:bg-black hover:text-white transition-all bg-black text-white shadow-hard-sm">All</button>
+                <button onclick="filterProducts('guitar', this)" class="tab-btn px-6 py-2 border-2 border-black font-bold uppercase hover:bg-black hover:text-white transition-all bg-white shadow-hard-sm">Guitars</button>
+                <button onclick="filterProducts('synth', this)" class="tab-btn px-6 py-2 border-2 border-black font-bold uppercase hover:bg-black hover:text-white transition-all bg-white shadow-hard-sm">Synths</button>
+                <button onclick="filterProducts('drums', this)" class="tab-btn px-6 py-2 border-2 border-black font-bold uppercase hover:bg-black hover:text-white transition-all bg-white shadow-hard-sm">Drums</button>
+                <button onclick="filterProducts('studio', this)" class="tab-btn px-6 py-2 border-2 border-black font-bold uppercase hover:bg-black hover:text-white transition-all bg-white shadow-hard-sm">Studio</button>
+                <button onclick="filterProducts('accessories', this)" class="tab-btn px-6 py-2 border-2 border-black font-bold uppercase hover:bg-black hover:text-white transition-all bg-white shadow-hard-sm">Accessories</button>
+            </div>
+        </div>
+
+        <!-- Full Product Grid -->
+        <div class="max-w-7xl mx-auto px-6 py-12">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8" id="product-grid">
+                
+                <!-- Product Card Template (Repeated for effect) -->
+                <!-- Guitars -->
+                <div class="product-card guitar group">
+                    <div class="relative bg-gray-100 border-2 border-black aspect-[4/5] overflow-hidden mb-3">
+                        <img src="https://images.unsplash.com/photo-1550985543-f4423c9d7481?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                        <div class="absolute top-2 right-2 bg-pastel-pink text-black text-xs font-bold px-2 py-1 border border-black">NEW</div>
+                    </div>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-display font-bold text-lg leading-tight">Fender Stratocaster</h3>
+                            <p class="font-mono text-xs text-gray-500">Electric Guitars</p>
+                        </div>
+                        <span class="font-bold">$1,299</span>
+                    </div>
+                    <button class="w-full mt-4 bg-white border-2 border-black py-2 text-sm font-bold uppercase hover:bg-black hover:text-white transition-colors shadow-hard-sm active:translate-y-1 active:shadow-none">Add to Cart</button>
+                </div>
+
+                <div class="product-card guitar group">
+                    <div class="relative bg-gray-100 border-2 border-black aspect-[4/5] overflow-hidden mb-3">
+                        <img src="https://images.unsplash.com/photo-1550291652-6ea9114a47b1?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                    </div>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-display font-bold text-lg leading-tight">Gibson Les Paul</h3>
+                            <p class="font-mono text-xs text-gray-500">Electric Guitars</p>
+                        </div>
+                        <span class="font-bold">$2,499</span>
+                    </div>
+                    <button class="w-full mt-4 bg-white border-2 border-black py-2 text-sm font-bold uppercase hover:bg-black hover:text-white transition-colors shadow-hard-sm active:translate-y-1 active:shadow-none">Add to Cart</button>
+                </div>
+
+                <!-- Synths -->
+                <div class="product-card synth group">
+                    <div class="relative bg-gray-100 border-2 border-black aspect-[4/5] overflow-hidden mb-3">
+                        <img src="https://images.unsplash.com/photo-1621617265538-4e142347d4c2?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                    </div>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-display font-bold text-lg leading-tight">Moog Subsequent 37</h3>
+                            <p class="font-mono text-xs text-gray-500">Analog Synths</p>
+                        </div>
+                        <span class="font-bold">$1,899</span>
+                    </div>
+                    <button class="w-full mt-4 bg-white border-2 border-black py-2 text-sm font-bold uppercase hover:bg-black hover:text-white transition-colors shadow-hard-sm active:translate-y-1 active:shadow-none">Add to Cart</button>
+                </div>
+
+                <div class="product-card synth group">
+                    <div class="relative bg-gray-100 border-2 border-black aspect-[4/5] overflow-hidden mb-3">
+                        <img src="https://images.unsplash.com/photo-1563989852230-588383a8f572?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                        <div class="absolute top-2 right-2 bg-pastel-blue text-xs font-bold px-2 py-1 border border-black">SALE</div>
+                    </div>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-display font-bold text-lg leading-tight">Korg Minilogue</h3>
+                            <p class="font-mono text-xs text-gray-500">Polyphonic Synths</p>
+                        </div>
+                        <span class="font-bold">$549</span>
+                    </div>
+                    <button class="w-full mt-4 bg-white border-2 border-black py-2 text-sm font-bold uppercase hover:bg-black hover:text-white transition-colors shadow-hard-sm active:translate-y-1 active:shadow-none">Add to Cart</button>
+                </div>
+
+                <!-- Drums -->
+                <div class="product-card drums group">
+                    <div class="relative bg-gray-100 border-2 border-black aspect-[4/5] overflow-hidden mb-3">
+                        <img src="https://images.unsplash.com/photo-1519892300165-cb5542fb47c7?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                    </div>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-display font-bold text-lg leading-tight">Roland TR-8S</h3>
+                            <p class="font-mono text-xs text-gray-500">Drum Machines</p>
+                        </div>
+                        <span class="font-bold">$749</span>
+                    </div>
+                    <button class="w-full mt-4 bg-white border-2 border-black py-2 text-sm font-bold uppercase hover:bg-black hover:text-white transition-colors shadow-hard-sm active:translate-y-1 active:shadow-none">Add to Cart</button>
+                </div>
+
+                <!-- Studio -->
+                <div class="product-card studio group">
+                    <div class="relative bg-gray-100 border-2 border-black aspect-[4/5] overflow-hidden mb-3">
+                        <img src="https://images.unsplash.com/photo-1595304044565-53816654b005?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                    </div>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-display font-bold text-lg leading-tight">Yamaha HS8</h3>
+                            <p class="font-mono text-xs text-gray-500">Studio Monitors</p>
+                        </div>
+                        <span class="font-bold">$399</span>
+                    </div>
+                    <button class="w-full mt-4 bg-white border-2 border-black py-2 text-sm font-bold uppercase hover:bg-black hover:text-white transition-colors shadow-hard-sm active:translate-y-1 active:shadow-none">Add to Cart</button>
+                </div>
+                 
+                 <!-- Accessories -->
+                 <div class="product-card accessories group">
+                    <div class="relative bg-gray-100 border-2 border-black aspect-[4/5] overflow-hidden mb-3">
+                        <img src="https://images.unsplash.com/photo-1516280440614-6697288d5d38?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                    </div>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-display font-bold text-lg leading-tight">Mogami Gold Cable</h3>
+                            <p class="font-mono text-xs text-gray-500">Accessories</p>
+                        </div>
+                        <span class="font-bold">$59</span>
+                    </div>
+                    <button class="w-full mt-4 bg-white border-2 border-black py-2 text-sm font-bold uppercase hover:bg-black hover:text-white transition-colors shadow-hard-sm active:translate-y-1 active:shadow-none">Add to Cart</button>
+                </div>
+
+                 <!-- Guitar FX -->
+                 <div class="product-card guitar group">
+                    <div class="relative bg-gray-100 border-2 border-black aspect-[4/5] overflow-hidden mb-3">
+                        <img src="https://images.unsplash.com/photo-1525992994463-71409249764d?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                        <div class="absolute top-2 right-2 bg-pastel-green text-xs font-bold px-2 py-1 border border-black">RARE</div>
+                    </div>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-display font-bold text-lg leading-tight">Strymon BigSky</h3>
+                            <p class="font-mono text-xs text-gray-500">Pedals & FX</p>
+                        </div>
+                        <span class="font-bold">$479</span>
+                    </div>
+                    <button class="w-full mt-4 bg-white border-2 border-black py-2 text-sm font-bold uppercase hover:bg-black hover:text-white transition-colors shadow-hard-sm active:translate-y-1 active:shadow-none">Add to Cart</button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Shared Footer for Product Page -->
+        <footer class="bg-noise-black text-noise-cream py-12 border-t-2 border-pastel-pink mt-12">
+            <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-6 md:mb-0">
+                    <h2 class="font-display text-3xl font-bold uppercase mb-2">Noise Factory.</h2>
+                    <p class="font-mono text-gray-400 text-sm">Experimental Gear Since 2024</p>
+                </div>
+                <div class="flex gap-8 font-sans font-bold uppercase text-sm">
+                    <a href="#" onclick="showView('home')" class="hover:text-pastel-blue">Home</a>
+                    <a href="#" class="hover:text-pastel-pink">Terms</a>
+                    <a href="#" class="hover:text-pastel-green">Shipping</a>
+                    <a href="#contact" onclick="showView('home')" class="hover:text-pastel-yellow">Contact</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Lightbox Modal -->
+    <div id="lightbox" class="fixed inset-0 bg-black/90 z-50 hidden flex justify-center items-center p-4" onclick="closeLightbox()">
+        <button class="absolute top-6 right-6 text-white text-4xl hover:rotate-90 transition-transform">&times;</button>
+        <img id="lightbox-img" src="" class="max-h-[90vh] max-w-[90vw] border-4 border-white shadow-[0_0_50px_rgba(255,255,255,0.2)]">
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedback-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex justify-center items-center p-4">
+        <div class="bg-white border-2 border-black p-8 w-full max-w-md relative shadow-hard">
+            <button onclick="document.getElementById('feedback-modal').classList.add('hidden')" class="absolute top-4 right-4 text-2xl font-bold">&times;</button>
+            <h2 class="font-display text-3xl font-bold mb-4">Spill the Tea.</h2>
+            <form class="space-y-4" onsubmit="event.preventDefault(); alert('Thanks for the noise! Your review is pending approval.'); document.getElementById('feedback-modal').classList.add('hidden');">
+                <div>
+                    <label class="block font-bold text-sm uppercase mb-1">Your Name</label>
+                    <input type="text" class="w-full border-2 border-black p-2 font-mono text-sm focus:outline-none focus:bg-pastel-blue" placeholder="Sonic Youth">
+                </div>
+                <div>
+                    <label class="block font-bold text-sm uppercase mb-1">Rating</label>
+                    <select class="w-full border-2 border-black p-2 font-mono text-sm focus:outline-none focus:bg-pastel-blue">
+                        <option>5 Stars - Mind Blowing</option>
+                        <option>4 Stars - Pretty Rad</option>
+                        <option>3 Stars - It's Okay</option>
+                        <option>2 Stars - Meh</option>
+                        <option>1 Star - Total Silence</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-bold text-sm uppercase mb-1">Review</label>
+                    <textarea class="w-full border-2 border-black p-2 font-mono text-sm h-32 focus:outline-none focus:bg-pastel-blue" placeholder="Tell us what you think..."></textarea>
+                </div>
+                <button type="submit" class="w-full bg-black text-white py-3 font-bold uppercase hover:bg-pastel-pink hover:text-black border-2 border-black transition-colors">Submit Review</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // View Navigation Logic
+        function showView(viewId) {
+            const homeView = document.getElementById('home-view');
+            const productsView = document.getElementById('products-view');
+            
+            // Scroll to top
+            window.scrollTo(0,0);
+
+            if (viewId === 'home') {
+                homeView.classList.remove('hidden');
+                productsView.classList.add('hidden');
+                // Re-enable smooth scroll for home
+                document.documentElement.style.scrollBehavior = 'smooth';
+            } else if (viewId === 'products') {
+                homeView.classList.add('hidden');
+                productsView.classList.remove('hidden');
+                // Disable smooth scroll temporarily so we jump to top
+                document.documentElement.style.scrollBehavior = 'auto';
+            }
+        }
+
+        // Product Filtering Logic
+        function filterProducts(category, btn) {
+            // Update Tab Styles
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(b => {
+                b.classList.remove('active', 'bg-black', 'text-white', 'shadow-hard-sm');
+                b.classList.add('bg-white', 'text-black', 'shadow-hard-sm');
+            });
+            
+            btn.classList.remove('bg-white', 'text-black');
+            btn.classList.add('active', 'bg-black', 'text-white');
+
+            // Filter Grid Items
+            const items = document.querySelectorAll('.product-card');
+            items.forEach(item => {
+                if (category === 'all' || item.classList.contains(category)) {
+                    item.classList.remove('hidden');
+                    // Add subtle animation for reappearance
+                    item.animate([
+                        { transform: 'scale(0.9)', opacity: 0 },
+                        { transform: 'scale(1)', opacity: 1 }
+                    ], {
+                        duration: 300,
+                        easing: 'ease-out'
+                    });
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+        }
+
+        // Lightbox Logic
+        function openLightbox(element) {
+            const imgSrc = element.querySelector('img').src;
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImg = document.getElementById('lightbox-img');
+            
+            lightboxImg.src = imgSrc;
+            lightbox.classList.remove('hidden');
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.add('hidden');
+        }
+
+        // --- 30 REAL REVIEWS GENERATION ---
+        const reviewsData = [
+            { name: "Alex R.", rating: 5, text: "Best gear shop in town. They don't just sell you a guitar; they help you find your sound.", color: "bg-noise-cream" },
+            { name: "Sarah M.", rating: 5, text: "Finally, a place that stocks actual synthesizers and not just entry-level keyboards. Staff knows their stuff.", color: "bg-pastel-blue" },
+            { name: "Jordan K.", rating: 4, text: "Love the workshops. Picked up a Casino guitar here and haven't put it down since.", color: "bg-pastel-pink" },
+            { name: "Mike D.", rating: 5, text: "The pedal selection is insane. Spent 2 hours trying fuzz pedals and no one rushed me.", color: "bg-pastel-green" },
+            { name: "Emily W.", rating: 4, text: "Great vibe, weird gear. Exactly what I needed for my experimental noise project.", color: "bg-pastel-yellow" },
+            { name: "Chris P.", rating: 3, text: "Cool shop, but wish they had more drum sticks in stock. Still, the drum machines are rad.", color: "bg-white" },
+            { name: "Davie504", rating: 5, text: "Epico. Bought a bass here. Slap approval granted.", color: "bg-pastel-purple" },
+            { name: "SynthLord", rating: 5, text: "They had a Moog Matriarch in stock. My wallet is crying but my soul is singing.", color: "bg-noise-cream" },
+            { name: "GuitarHero99", rating: 4, text: "Bought a Telecaster. Setup was perfect right out of the box. Thanks guys!", color: "bg-pastel-blue" },
+            { name: "BeatsByDre", rating: 5, text: "The studio monitor listening room is a game changer. accurate representation.", color: "bg-pastel-pink" },
+            { name: "IndieKid", rating: 5, text: "This place feels like a museum where you can touch everything. 10/10.", color: "bg-pastel-green" },
+            { name: "TechnoViking", rating: 4, text: "Needs more eurorack cables, but the modular selection is growing. Good start.", color: "bg-pastel-yellow" },
+            { name: "JazzCat", rating: 5, text: "Found a vintage jazzmaster that plays like butter. Hidden gem of a store.", color: "bg-white" },
+            { name: "MetalHead", rating: 5, text: "Distortion pedal heaven. Pure filth. I love it.", color: "bg-pastel-purple" },
+            { name: "LoFiGirl", rating: 5, text: "Perfect place to find chill vibes and warm keys. The staff is super chill too.", color: "bg-noise-cream" },
+            { name: "DrummerDave", rating: 4, text: "Got a Roland TR-8S. Best price I could find locally. Support local businesses!", color: "bg-pastel-blue" },
+            { name: "VocalFry", rating: 3, text: "Microphone selection is decent, but could use more ribbon mics.", color: "bg-pastel-pink" },
+            { name: "ProducerPat", rating: 5, text: "Everything I need for my home studio. The acoustic treatment advice was solid.", color: "bg-pastel-green" },
+            { name: "NoiseMaker", rating: 5, text: "Chaos. Noise. Beauty. This store gets it.", color: "bg-pastel-yellow" },
+            { name: "AmbientAndy", rating: 4, text: "Great reverb pedals. I got lost in the wash for an hour.", color: "bg-white" },
+            { name: "RockStar", rating: 5, text: "Bought my first Gibson here. A core memory unlocked.", color: "bg-pastel-purple" },
+            { name: "PopPrincess", rating: 5, text: "Cute aesthetic, serious gear. Loved the pink strap I found!", color: "bg-noise-cream" },
+            { name: "BassFace", rating: 4, text: "Solid amp selection. Could use more bass cabs though.", color: "bg-pastel-blue" },
+            { name: "ModFreak", rating: 5, text: "They let me patch a whole wall of synths together. Paradise.", color: "bg-pastel-pink" },
+            { name: "Shoegazer", rating: 5, text: "I looked at my shoes while playing a Jaguar. It was perfect.", color: "bg-pastel-green" },
+            { name: "AudioNerd", rating: 5, text: "Cables are high quality. No signal loss. Very satisfied.", color: "bg-pastel-yellow" },
+            { name: "LiveLooper", rating: 4, text: "Loop station selection is on point. Jammed for a bit.", color: "bg-white" },
+            { name: "VinylJunkie", rating: 3, text: "They focus on instruments, but a small vinyl section would be cool.", color: "bg-pastel-purple" },
+            { name: "BandDad", rating: 5, text: "Bought a drum kit for my son. Staff helped us load it into the car. Great service.", color: "bg-noise-cream" },
+            { name: "GearAdik", rating: 5, text: "I have no money left, but I have a lot of joy. Thanks Noise Factory.", color: "bg-pastel-blue" }
+        ];
+
+        function createReviewCard(review, rotate) {
+            const stars = Array(5).fill('<i class="fas fa-star text-white drop-shadow-md"></i>').fill('<i class="far fa-star text-white/50"></i>', review.rating).join('');
+            
+            return `
+                <div class="min-w-[300px] md:min-w-[350px] ${review.color} border-2 border-black p-6 shadow-hard flex flex-col justify-between transform hover:scale-105 transition-transform ${rotate ? 'rotate-1' : '-rotate-1'}">
+                    <div>
+                        <div class="flex text-lg mb-3 space-x-1">
+                            ${stars}
+                        </div>
+                        <p class="font-sans italic text-base leading-tight">"${review.text}"</p>
+                    </div>
+                    <div class="flex items-center gap-3 mt-4 pt-4 border-t border-black/10">
+                        <div class="w-8 h-8 bg-black rounded-full border border-white"></div>
+                        <span class="font-bold uppercase text-sm tracking-wide">${review.name}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- GALLERY IMAGE GENERATION ---
+        const galleryImages = [
+            "https://images.unsplash.com/photo-1574676527582-7d0421685b30?q=80&w=600&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?q=80&w=600&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=600&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?q=80&w=600&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1460039230329-eb070fc6c77c?q=80&w=600&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1595304044565-53816654b005?q=80&w=600&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1525992994463-71409249764d?q=80&w=600&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1516280440614-6697288d5d38?q=80&w=600&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1550985543-f4423c9d7481?q=80&w=600&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1563989852230-588383a8f572?q=80&w=600&auto=format&fit=crop"
+        ];
+
+        function createGalleryItem(url) {
+            return `
+                <div class="relative w-[300px] h-[300px] shrink-0 border-2 border-black group cursor-pointer overflow-hidden bg-white shadow-hard hover:shadow-hard-hover transition-all" onclick="openLightbox(this)">
+                    <img src="${url}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex justify-center items-center">
+                        <i class="fas fa-search-plus text-white text-3xl drop-shadow-lg"></i>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Inject content on load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Reviews Injection
+            const row1 = document.getElementById('reviews-row-1');
+            const row2 = document.getElementById('reviews-row-2');
+            
+            const halfReviews = Math.ceil(reviewsData.length / 2);
+            const firstHalfReviews = reviewsData.slice(0, halfReviews);
+            const secondHalfReviews = reviewsData.slice(halfReviews);
+
+            const row1HTML = firstHalfReviews.map(r => createReviewCard(r, true)).join('');
+            row1.innerHTML = row1HTML + row1HTML; 
+
+            const row2HTML = secondHalfReviews.map(r => createReviewCard(r, false)).join('');
+            row2.innerHTML = row2HTML + row2HTML; 
+
+            // Gallery Injection (Marquee)
+            const galleryRow1 = document.getElementById('gallery-row-1');
+            const galleryRow2 = document.getElementById('gallery-row-2');
+
+            // Split images for two rows
+            const halfGallery = Math.ceil(galleryImages.length / 2);
+            const firstHalfImages = galleryImages.slice(0, halfGallery);
+            const secondHalfImages = galleryImages.slice(halfGallery);
+
+            // Duplicate for infinite scroll
+            // We repeat it 4 times to ensure enough length for large screens before the loop resets
+            const gRow1HTML = firstHalfImages.map(url => createGalleryItem(url)).join('');
+            galleryRow1.innerHTML = gRow1HTML + gRow1HTML + gRow1HTML + gRow1HTML;
+
+            const gRow2HTML = secondHalfImages.map(url => createGalleryItem(url)).join('');
+            galleryRow2.innerHTML = gRow2HTML + gRow2HTML + gRow2HTML + gRow2HTML;
+
+            // Anti-design rotation for products
+            const cards = document.querySelectorAll('#instruments .group');
+            cards.forEach((card) => {
+                const rot = Math.random() * 2 - 1; 
+                card.style.transform = `rotate(${rot}deg)`;
+            });
+        });
+    </script>
+</body>
+</html>
